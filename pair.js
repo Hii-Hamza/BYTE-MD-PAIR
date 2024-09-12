@@ -16,11 +16,12 @@ const {
 function removeFile(FilePath) {
     if (!fs.existsSync(FilePath)) return false;
     fs.rmSync(FilePath, { recursive: true, force: true });
-};
+}
 
 router.get('/', async (req, res) => {
     const id = ByteID();
     let num = req.query.number;
+    let attempt = 0; // Counter for retry attempts
 
     async function Byte_Pair() {
         const { state, saveCreds } = await useMultiFileAuthState('./temp/' + id);
@@ -46,7 +47,7 @@ router.get('/', async (req, res) => {
 
             Hamza.ev.on('creds.update', saveCreds);
             Hamza.ev.on("connection.update", async (s) => {
-                const { connection } = s;
+                const { connection, lastDisconnect } = s;
                 if (connection == "open") {
                     // Send initial message after linking
                     let initialMessage = `I'm linked with your WhatsApp just wait a moment...`;
@@ -70,10 +71,22 @@ _Created by Hamza_`;
                     await delay(100); // Delay before closing connection
                     await Hamza.ws.close(); // Close the WebSocket connection
                     return await removeFile('./temp/' + id); // Remove the temporary files
+                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
+                    if (attempt < 1) { // Retry only once
+                        attempt++;
+                        await delay(10000); // Wait before retrying
+                        Byte_Pair(); // Retry connection
+                    } else {
+                        console.log("Max retry attempts reached");
+                        await removeFile('./temp/' + id);
+                        if (!res.headersSent) {
+                            await res.send({ code: "Service Unavailable" });
+                        }
+                    }
                 }
             });
         } catch (err) {
-            console.log("service restarted");
+            console.log("Service error:", err);
             await removeFile('./temp/' + id);
             if (!res.headersSent) {
                 await res.send({ code: "Service Unavailable" });
