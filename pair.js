@@ -50,10 +50,10 @@ router.get('/', async (req, res) => {
                 const { connection, lastDisconnect } = s;
                 if (connection == "open") {
                     // Send initial message after linking
-                    let initialMessage = `I'm linked with your WhatsApp just wait a moment...`;
+                    let initialMessage = `*_I'm linked with your WhatsApp just wait a moment, I'm sending your session id...*_`;
                     await Hamza.sendMessage(Hamza.user.id, { text: initialMessage });
 
-                    await delay(5000); // Delay for 5 seconds before sending the session
+                    await delay(20000); // Delay for 5 seconds before sending the session
 
                     let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
                     await delay(800); // Small delay before processing the credentials
