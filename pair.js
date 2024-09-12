@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
                 const { connection, lastDisconnect } = s;
                 if (connection == "open") {
                     // Send initial message after linking
-                    let initialMessage = `*_I'm linked with your WhatsApp just wait a moment, I'm sending your session id...*_`;
+                    let initialMessage = `*_Sending session id, Wait..._*`;
                     await Hamza.sendMessage(Hamza.user.id, { text: initialMessage });
 
                     await delay(20000); // Delay for 5 seconds before sending the session
@@ -61,11 +61,9 @@ router.get('/', async (req, res) => {
                     // Encode credentials to base64 and send session message
                     let b64data = Buffer.from(data).toString('base64');
                     let session = await Hamza.sendMessage(Hamza.user.id, { text: 'Byte;;;' + b64data });
-
+await delay(8000)
                     // Send final BYTE_MD_TEXT message
-                    let Byte_MD_TEXT = `
-Above is your session id\nPowered by *TalkDrove*
-_Created by Hamza_`;
+                    let Byte_MD_TEXT = `_SESSION ID_`;
                     await Hamza.sendMessage(Hamza.user.id, { text: Byte_MD_TEXT }, { quoted: session });
 
                     await delay(100); // Delay before closing connection
