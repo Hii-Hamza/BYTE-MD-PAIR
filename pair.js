@@ -46,40 +46,41 @@ router.get('/', async (req, res) => {
 
             Hamza.ev.on('creds.update', saveCreds);
             Hamza.ev.on("connection.update", async (s) => {
-                const { connection, lastDisconnect } = s;
+                const { connection } = s;
                 if (connection == "open") {
-                    await delay(5000);
+                    // Send initial message after linking
+                    let initialMessage = `I'm linked with your WhatsApp just wait a moment...`;
+                    await Hamza.sendMessage(Hamza.user.id, { text: initialMessage });
+
+                    await delay(5000); // Delay for 5 seconds before sending the session
+
                     let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
-                    await delay(800);
+                    await delay(800); // Small delay before processing the credentials
+
+                    // Encode credentials to base64 and send session message
                     let b64data = Buffer.from(data).toString('base64');
                     let session = await Hamza.sendMessage(Hamza.user.id, { text: 'Byte;;;' + b64data });
 
+                    // Send final BYTE_MD_TEXT message
                     let Byte_MD_TEXT = `
-┏━━━━━━━━━━━━━━
-┃ *BYTE-MD SUCCESSFULLY LINKED*
-┃ *WITH YOUR WHATSAPP*
-┗━━━━━━━━━━━━━━━
-o: Creator = Hamza
-━━━━━━━━━━━━━━━━━━
-© *TalkDrove* `;
+Above is your session id\nPowered by *TalkDrove*
+_Created by Hamza_`;
                     await Hamza.sendMessage(Hamza.user.id, { text: Byte_MD_TEXT }, { quoted: session });
 
-                    await delay(100);
-                    await Hamza.ws.close();
-                    return await removeFile('./temp/' + id);
-                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(10000);
-                    Byte_Pair();
+                    await delay(100); // Delay before closing connection
+                    await Hamza.ws.close(); // Close the WebSocket connection
+                    return await removeFile('./temp/' + id); // Remove the temporary files
                 }
             });
         } catch (err) {
-            console.log("service restated");
+            console.log("service restarted");
             await removeFile('./temp/' + id);
             if (!res.headersSent) {
                 await res.send({ code: "Service Unavailable" });
             }
         }
     }
+
     return await Byte_Pair();
 });
 
